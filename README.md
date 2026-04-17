@@ -1,17 +1,18 @@
 # 📦 MinIO + Spring Boot File Upload Project
 
-This project demonstrates how to integrate **MinIO (S3-compatible object storage)** with a Spring Boot application to upload, store, and retrieve files (images). It also includes **Swagger (OpenAPI)** for API documentation and testing.
+This project demonstrates how to integrate **MinIO (S3-compatible object storage)** with a Spring Boot application to upload, store, and retrieve files (images). It also includes **Swagger (OpenAPI)** for API documentation and **Docker support** for easy deployment.
 
 ---
 
-# 🚀 What You Will Learn
+# 🚀 Features
 
-* How object storage works (MinIO / S3)
-* Upload files using Spring Boot
-* Store file metadata in database
-* Generate and use file URLs
-* Clean architecture (Controller → Service → Repository)
-* API documentation using Swagger UI
+* Upload images to MinIO
+* Store file metadata in MySQL
+* Retrieve images via URL
+* Delete product (and optionally file)
+* Swagger UI for API testing
+* Dockerized application
+* Docker Compose (multi-container setup)
 
 ---
 
@@ -20,135 +21,74 @@ This project demonstrates how to integrate **MinIO (S3-compatible object storage
 ## 1. Bucket
 
 * Top-level container that holds objects (files)
-* Similar to a folder
-
----
 
 ## 2. Object (Actual File)
 
 An object consists of:
 
-* File data (binary data)
+* File data (binary)
 * Metadata
 * Object key (path)
 
-📌 Example:
+Example:
 
 ```
 /user/101/profile.jpg
 ```
 
----
+## 3. Object Key
 
-## 3. Object Key (Very Important)
+* Unique identifier of file inside bucket
 
-* Unique identifier of a file inside a bucket
-* Works like a file path
-
-📌 Example:
+Example:
 
 ```
 products/123/image.png
 ```
 
----
-
 ## 4. Metadata
 
-Extra information about files:
-
-* content-type (image/png, image/jpeg)
+* content-type
 * size
 * uploaded-by
 
-👉 Used for:
-
-* Filtering
-* Security
-* Processing
-
----
-
 ## 5. Access Key & Secret Key
 
-* Used for authentication (like username & password)
-* Required to access MinIO APIs
-
----
+* Used for authentication
 
 ## 6. Endpoint
 
-* URL where MinIO server runs
-
-📌 Example:
-
 ```
-http://localhost:9000   → API
-http://localhost:9001   → Console UI
+http://localhost:9000 → API
+http://localhost:9001 → Console
 ```
 
 ---
 
-## 7. MinIO Server
-
-Main engine that:
-
-* Handles API requests
-* Manages buckets and objects
-* Stores files
-* Handles replication
-
----
-
-# 🏗️ Project Architecture
+# 🏗️ Architecture
 
 ```
-Controller  →  Service  →  Repository  →  Database
-                    ↓
-                 MinIO
+Controller → Service → Repository → Database
+                  ↓
+                MinIO
 ```
 
 ---
 
 # 📂 Project Flow
 
-## 🟢 Upload Flow
+## Upload Flow
 
-1. User sends request with file
-2. Controller receives request
-3. Service uploads file to MinIO
-4. MinIO stores file and returns objectKey
-5. Save objectKey + metadata in database
-6. Return response to client
+1. Upload file
+2. Store in MinIO
+3. Save metadata in DB
+4. Return URL
 
----
+## Fetch Flow
 
-## 🔵 Fetch Flow
-
-1. Fetch product from database
-2. Get stored objectKey / URL
-3. Return URL to frontend
-4. Frontend displays image
-
----
-
-## 🔴 Delete Flow
-
-1. Delete product from database
-2. (Optional) Delete file from MinIO bucket
-
----
-
-# 📊 Example Stored Data
-
-## Database
-
-| Field     | Value                                          |
-| --------- | ---------------------------------------------- |
-| productId | 1                                              |
-| title     | Shoes                                          |
-| objectKey | products/uuid.png                              |
-| url       | http://localhost:9000/bucket/products/uuid.png |
+1. Fetch from DB
+2. Return URL
+3. Frontend displays image
 
 ---
 
@@ -156,21 +96,16 @@ Controller  →  Service  →  Repository  →  Database
 
 * Spring Boot
 * MinIO
-* MySQL (or any relational DB)
+* MySQL
 * Maven
+* Docker
 * Swagger (OpenAPI)
 
 ---
 
-# 📘 Swagger API Documentation
+# 📘 Swagger API
 
-This project uses Swagger via:
-
-👉 `springdoc-openapi`
-
-## ▶️ Access Swagger UI
-
-After running the application, open:
+Open:
 
 ```
 http://localhost:8080/swagger-ui/index.html
@@ -178,69 +113,28 @@ http://localhost:8080/swagger-ui/index.html
 
 ---
 
-## 🔥 Features
+# 🔐 Environment Setup
 
-* Interactive API documentation
-* Test APIs directly from browser
-* File upload support (multipart/form-data)
-* Request & response examples
-
----
-
-## 🧪 Available APIs in Swagger
-
-### ➕ Upload Product
+Create `.env`:
 
 ```
-POST /api/products
-```
+DB_URL=jdbc:mysql://localhost:3306/minio_db
+DB_USERNAME=root
+DB_PASSWORD=yourpassword
 
-* Upload product with image using form-data
-
----
-
-### 📥 Get Product
-
-```
-GET /api/products/{id}
+MINIO_ENDPOINT=http://localhost:9000
+MINIO_ACCESS_KEY=admin
+MINIO_SECRET_KEY=password123
+MINIO_BUCKET=my-basket-product-images
 ```
 
 ---
 
-### ❌ Delete Product
+# ▶️ Run Without Docker
+
+## 1. Start MinIO
 
 ```
-DELETE /api/products/{id}
-```
-
----
-
-## ⚠️ Important Notes for File Upload
-
-* Endpoint must use:
-
-```
-consumes = multipart/form-data
-```
-
-* DTO must include:
-
-```
-MultipartFile file
-```
-
-* Swagger uses:
-
-```
-type: string
-format: binary
-```
-
----
-
-# ▶️ Running MinIO (Docker)
-
-```bash
 docker run -p 9000:9000 -p 9001:9001 \
 --name minio \
 -e MINIO_ROOT_USER=admin \
@@ -249,44 +143,130 @@ docker run -p 9000:9000 -p 9001:9001 \
 quay.io/minio/minio server /data --console-address ":9001"
 ```
 
----
+## 2. Start MySQL
 
-# ⚙️ Application Configuration
+```
+CREATE DATABASE minio_db;
+```
 
-```yaml
-minio:
-  url: http://localhost:9000
-  bucket-name: my-bucket
+## 3. Run App
+
+```
+mvn spring-boot:run
 ```
 
 ---
 
-# 🌐 API Endpoints
+# 🐳 Run With Docker (Single Container)
 
-## ➕ Upload Product
+## Build JAR
+
+```
+mvn clean package -DskipTests
+```
+
+## Build Image
+
+```
+docker build -t minio-spring-app .
+```
+
+## Run Container
+
+```
+docker run -p 8080:8080 \
+-e DB_URL=jdbc:mysql://host.docker.internal:3306/minio_db \
+-e DB_USERNAME=root \
+-e DB_PASSWORD=yourpassword \
+-e MINIO_ENDPOINT=http://host.docker.internal:9000 \
+-e MINIO_ACCESS_KEY=admin \
+-e MINIO_SECRET_KEY=password123 \
+-e MINIO_BUCKET=my-basket-product-images \
+minio-spring-app
+```
+
+---
+
+# 🐳 Run Full System (Docker Compose) 🚀
+
+## docker-compose.yml
+
+```
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: minio_db
+    ports:
+      - "3307:3306"
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio-server
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  app:
+    build: .
+    container_name: spring-app
+    depends_on:
+      - mysql
+      - minio
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/minio_db
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: password123
+      MINIO_BUCKET: my-basket-product-images
+```
+
+---
+
+## Run Everything
+
+```
+docker-compose up --build
+```
+
+---
+
+## Access
+
+* App → http://localhost:8080
+* Swagger → http://localhost:8080/swagger-ui/index.html
+* MinIO → http://localhost:9001
+
+---
+
+# 📡 API Endpoints
+
+### Upload
 
 ```
 POST /api/products
 ```
 
-Form-data:
-
-* title
-* description
-* price
-* file
-
----
-
-## 📥 Get Product
+### Get
 
 ```
 GET /api/products/{id}
 ```
 
----
-
-## ❌ Delete Product
+### Delete
 
 ```
 DELETE /api/products/{id}
@@ -294,26 +274,34 @@ DELETE /api/products/{id}
 
 ---
 
-# 🔥 Key Takeaways
+# ⚠️ Important Notes
 
-* MinIO works like AWS S3
-* Files are NOT stored in DB, only metadata
-* Object key is the most important concept
-* Swagger helps visualize and test APIs easily
-* Clean separation of concerns is important
+* Files are NOT stored in DB
+* Object key is critical
+* Use `host.docker.internal` only in single-container mode
+* Use service names (`mysql`, `minio`) in docker-compose
 
 ---
 
 # 🚀 Future Improvements
 
-* Pre-signed URLs (secure access)
-* Multiple image support
-* File validation & size limits
-* Delete file from MinIO when deleting product
-* Use UUID naming to avoid conflicts
-* Add authentication (JWT) in Swagger
+* Pre-signed URLs
+* Multiple images
+* JWT authentication
+* Bucket auto-creation
+* CI/CD pipeline
 
 ---
 
+# 💡 Author Notes
 
-⭐ If you found this useful, keep building and scaling it further!
+This project demonstrates:
+
+* Object storage (MinIO)
+* Backend file handling
+* Docker-based deployment
+* Clean architecture
+
+---
+
+⭐ If you found this useful, feel free to fork and build on it!

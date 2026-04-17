@@ -1,0 +1,64 @@
+# ===============================
+# 🧱 Build files
+# ===============================
+target/
+build/
+*.jar
+*.war
+*.ear
+
+# ===============================
+# 📦 Dependency / IDE files
+# ===============================
+.mvn/
+.mvn/wrapper/maven-wrapper.jar
+
+# ===============================
+# 💻 IDE files
+# ===============================
+
+# IntelliJ
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# ===============================
+# 🧾 Logs
+# ===============================
+logs/
+*.log
+
+# ===============================
+# 🔐 Environment / Secrets
+# ===============================
+.env
+
+# application secrets (optional)
+application-prod.yml
+application-local.yml
+
+# ===============================
+# 🗄️ OS files
+# ===============================
+.DS_Store
+Thumbs.db
+
+# ===============================
+# ☁️ MinIO / File storage (IMPORTANT)
+# ===============================
+minio/
+data/
+uploads/
+
+# ===============================
+# 🧪 Temporary files
+# ===============================
+*.tmp
+*.temp
